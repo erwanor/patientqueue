@@ -3,6 +3,13 @@ name = "patientqueue"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+futures = "0.3.24"
+tokio = { version = "1.20.1", features = ["full"] }
+tokio-util = { version = "0.7.3", features = ["time"] }
