@@ -1,14 +1,29 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+use std::{task::{Waker, Poll, Context}, time::Duration};
+
+use tokio_util::time::{DelayQueue, delay_queue::{Expired, Key}};
+
+pub struct PatientQueue<T> {
+    inner: DelayQueue<T>,
+    waker: Option<Waker>,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl<T> PatientQueue<T> {
+    pub fn insert(&mut self, value: T, timeout: Duration) -> Key {
+        if let Some(w) = self.waker.take() {
+            w.wake()
+        }
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+        self.inner.insert(value, timeout)
+    }
+
+    pub fn poll_expired(&mut self, cx: &mut Context<'_>) -> Poll<Expired<T>> {
+        match self.inner.poll_expired(cx) {
+            Poll::Ready(Some(entry)) => Poll::Ready(entry),
+            Poll::Ready(None) => {
+                self.waker = Some(cx.waker().clone());
+                Poll::Pending
+            }
+            Poll::Pending => Poll::Pending,
+        }
     }
 }
