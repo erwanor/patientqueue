@@ -7,6 +7,15 @@ pub struct PatientQueue<T> {
     waker: Option<Waker>,
 }
 
+impl<T> Default for PatientQueue<T> {
+    fn default() -> Self {
+        Self {
+            inner: DelayQueue::new(),
+            waker: None,
+        }
+    }
+}
+
 impl<T> PatientQueue<T> {
     pub fn insert(&mut self, value: T, timeout: Duration) -> Key {
         if let Some(w) = self.waker.take() {
